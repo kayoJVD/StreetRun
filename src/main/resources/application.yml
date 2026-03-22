@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: street-race
+  profiles:
+    activity: ${SPRING_PROFILES_ACTIVE:dev}
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${BASE_URL}
+    username: ${BASE_USERNAME}
+    password: ${BASE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    jpa:
+      show-sql: true
+      properties:
+        hibernate:
+          format_sql: true

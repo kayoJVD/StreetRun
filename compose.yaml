@@ -1,0 +1,15 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: sr-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: auth_db
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
