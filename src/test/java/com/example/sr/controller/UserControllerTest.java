@@ -1,6 +1,8 @@
 package com.example.sr.controller;
 
 import com.example.sr.commons.UserCreator;
+import com.example.sr.config.SecurityFilter;
+import com.example.sr.config.TokenConfig;
 import com.example.sr.domain.User;
 import com.example.sr.dto.request.UserRequest;
 import com.example.sr.dto.response.UserResponse;
@@ -14,6 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentMatchers;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.MediaType;
@@ -26,6 +29,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.io.IOException;
 
 @WebMvcTest(UserController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
 
     @Autowired
@@ -36,6 +40,13 @@ class UserControllerTest {
 
     @MockitoBean
     private UserMapper mapper;
+
+
+    @MockitoBean
+    private TokenConfig tokenConfig;
+
+    @MockitoBean
+    private SecurityFilter securityFilter;
 
     @Autowired
     private ResourceLoader resourceLoader;
@@ -60,10 +71,10 @@ class UserControllerTest {
         String responseJson = readFile("users/get-user-by-email-200.json");
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/users")
-                        .param("email", user.getEmail()))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().json(responseJson));
+                .param("email", user.getEmail()))
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isOk())
+            .andExpect(MockMvcResultMatchers.content().json(responseJson));
     }
 
     @Test
@@ -75,11 +86,11 @@ class UserControllerTest {
         BDDMockito.when(service.registerUser(ArgumentMatchers.any(UserRequest.class))).thenReturn(response);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/users")
-                        .content(requestJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andExpect(MockMvcResultMatchers.content().json(responseJson));
+                .content(requestJson)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isCreated())
+            .andExpect(MockMvcResultMatchers.content().json(responseJson));
     }
 
     @Test
@@ -91,20 +102,21 @@ class UserControllerTest {
         BDDMockito.when(service.updateUser(ArgumentMatchers.eq(user.getId()), ArgumentMatchers.any(UserRequest.class))).thenReturn(response);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/users/{id}", user.getId())
-                        .content(requestJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().json(responseJson));
+                .content(requestJson)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isOk())
+            .andExpect(MockMvcResultMatchers.content().json(responseJson));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/users/{id} removes User when successful")
     void deleteUser_RemovesUser_WhenSuccessful() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/users/{id}", user.getId()))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isNoContent());
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isNoContent());
     }
+
     @ParameterizedTest
     @MethodSource("badRequestSource")
     @DisplayName("POST /api/v1/users returns 400 Bad Request when fields are invalid")
@@ -112,10 +124,10 @@ class UserControllerTest {
         String requestJson = readFile(fileName);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/users")
-                        .content(requestJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .content(requestJson)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
     }
 
     @ParameterizedTest
@@ -125,16 +137,16 @@ class UserControllerTest {
         String requestJson = readFile(fileName);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/users/{id}", user.getId())
-                        .content(requestJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .content(requestJson)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
     }
 
     private static java.util.stream.Stream<org.junit.jupiter.params.provider.Arguments> badRequestSource() {
         return java.util.stream.Stream.of(
-                org.junit.jupiter.params.provider.Arguments.of("users/request-user-blank-name-400.json"),
-                org.junit.jupiter.params.provider.Arguments.of("users/request-user-invalid-email-400.json")
+            org.junit.jupiter.params.provider.Arguments.of("users/request-user-blank-name-400.json"),
+            org.junit.jupiter.params.provider.Arguments.of("users/request-user-invalid-email-400.json")
         );
     }
 

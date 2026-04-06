@@ -1,6 +1,8 @@
 package com.example.sr.controller;
 
 import com.example.sr.commons.SportsCreator;
+import com.example.sr.config.SecurityFilter;
+import com.example.sr.config.TokenConfig;
 import com.example.sr.dto.request.SportsRequest;
 import com.example.sr.dto.response.SportsResponse;
 import com.example.sr.service.SportsService;
@@ -13,6 +15,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentMatchers;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -20,7 +24,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @WebMvcTest(SportsController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class SportsControllerTest {
 
     @Autowired
@@ -35,6 +39,12 @@ class SportsControllerTest {
 
     @MockitoBean
     private SportsService service;
+
+    @MockitoBean
+    private TokenConfig tokenConfig;
+
+    @MockitoBean
+    private SecurityFilter securityFilter;
 
     @Autowired
     private ResourceLoader resourceLoader;
@@ -54,9 +64,9 @@ class SportsControllerTest {
         String responseJson = readFile("sports/get-sports-200.json");
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/sports"))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().json(responseJson));
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isOk())
+            .andExpect(MockMvcResultMatchers.content().json(responseJson));
     }
 
     @Test
@@ -68,11 +78,11 @@ class SportsControllerTest {
         BDDMockito.when(service.createSports(ArgumentMatchers.any(SportsRequest.class))).thenReturn(response);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/sports")
-                        .content(requestJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andExpect(MockMvcResultMatchers.content().json(responseJson));
+                .content(requestJson)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isCreated())
+            .andExpect(MockMvcResultMatchers.content().json(responseJson));
     }
 
     @ParameterizedTest
@@ -82,15 +92,15 @@ class SportsControllerTest {
         String requestJson = readFile(fileName);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/sports")
-                        .content(requestJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .content(requestJson)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
     }
 
     private static java.util.stream.Stream<Arguments> badRequestSource() {
         return java.util.stream.Stream.of(
-                Arguments.of("sports/post-request-sport-blank-name-400.json")
+            Arguments.of("sports/post-request-sport-blank-name-400.json")
         );
     }
 

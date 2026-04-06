@@ -1,6 +1,9 @@
 package com.example.sr.controller;
 
 import com.example.sr.commons.ActivityCreator;
+import com.example.sr.config.JWTUserData;
+import com.example.sr.config.SecurityFilter;
+import com.example.sr.config.TokenConfig;
 import com.example.sr.dto.request.ActivityRequest;
 import com.example.sr.dto.response.ActivityResponse;
 import com.example.sr.service.ActivityService;
@@ -13,9 +16,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentMatchers;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -28,6 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @WebMvcTest(ActivityController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class ActivityControllerTest {
 
     @Autowired
@@ -36,40 +43,55 @@ class ActivityControllerTest {
     @MockitoBean
     private ActivityService service;
 
+    @MockitoBean
+    private TokenConfig tokenConfig;
+
+    @MockitoBean
+    private SecurityFilter securityFilter;
+
     @Autowired
     private ResourceLoader resourceLoader;
 
     private ActivityResponse response;
 
+    private final Long loggedInUserId = 1L;
+
     @BeforeEach
     void init() {
         response = ActivityCreator.createValidActivityResponse();
+
+        // MÁGICA: Forjando o crachá de acesso para a anotação @AuthenticationPrincipal funcionar
+        JWTUserData userData = JWTUserData.builder().userId(loggedInUserId).email("kayo@alves.com").build();
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userData, null, List.of());
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
     @Test
     @DisplayName("GET /api/v1/activities/{id} returns ActivityResponse when successful")
     void findActivityById_ReturnsActivityResponse_WhenSuccessful() throws Exception {
-        BDDMockito.when(service.searchActivityById(1L)).thenReturn(response);
+
+        BDDMockito.when(service.searchActivityById(ArgumentMatchers.eq(1L), ArgumentMatchers.any())).thenReturn(response);
 
         String responseJson = readFile("activities/get-activity-200.json");
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/activities/{id}", 1L))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().json(responseJson));
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isOk())
+            .andExpect(MockMvcResultMatchers.content().json(responseJson));
     }
 
     @Test
-    @DisplayName("GET /api/v1/activities/user/{id} returns list of ActivityResponse when successful")
-    void listActivitiesByUser_ReturnsListOfActivityResponse_WhenSuccessful() throws Exception {
-        BDDMockito.when(service.listActivitiesByUser(1L)).thenReturn(List.of(response));
+    @DisplayName("GET /api/v1/activities/me returns list of ActivityResponse when successful")
+    void listMyActivities_ReturnsListOfActivityResponse_WhenSuccessful() throws Exception {
+
+        BDDMockito.when(service.listActivitiesByUser(ArgumentMatchers.any())).thenReturn(List.of(response));
 
         String responseJson = readFile("activities/list-activities-200.json");
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/activities/user/{id}", 1L))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().json(responseJson));
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/activities/me"))
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isOk())
+            .andExpect(MockMvcResultMatchers.content().json(responseJson));
     }
 
     @Test
@@ -78,40 +100,40 @@ class ActivityControllerTest {
         String requestJson = readFile("activities/post-request-activity.json");
         String responseJson = readFile("activities/post-response-activity-201.json");
 
-        BDDMockito.when(service.registerActivity(ArgumentMatchers.any(ActivityRequest.class))).thenReturn(response);
+        BDDMockito.when(service.registerActivity(ArgumentMatchers.any(ActivityRequest.class), ArgumentMatchers.any())).thenReturn(response);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/activities")
-                        .content(requestJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andExpect(MockMvcResultMatchers.content().json(responseJson));
+                .content(requestJson)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isCreated())
+            .andExpect(MockMvcResultMatchers.content().json(responseJson));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/activities/{id} removes Activity when successful")
     void deleteActivityById_RemovesActivity_WhenSuccessful() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/activities/{id}", 1L))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isNoContent());
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isNoContent());
     }
 
     @ParameterizedTest
     @MethodSource("badRequestSource")
-    @DisplayName("POST /api/v1/activities returns 400 Bad Request when fields are invalid")
+    @DisplayName("POST /api/v1/activities returns 422 Unprocessable Entity when fields are invalid")
     void registerActivity_ReturnsBadRequest_WhenFieldsAreInvalid(String fileName) throws Exception {
         String requestJson = readFile(fileName);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/activities")
-                        .content(requestJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .content(requestJson)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
     }
 
     private static java.util.stream.Stream<Arguments> badRequestSource() {
         return java.util.stream.Stream.of(
-                Arguments.of("activities/post-request-activity-invalid-400.json")
+            Arguments.of("activities/post-request-activity-invalid-400.json")
         );
     }
 

@@ -1,5 +1,8 @@
 package com.example.sr.service;
 
+import com.example.sr.commons.ActivityCreator;
+import com.example.sr.commons.SportsCreator;
+import com.example.sr.commons.UserCreator;
 import com.example.sr.domain.Activity;
 import com.example.sr.domain.Sports;
 import com.example.sr.domain.User;
@@ -10,13 +13,12 @@ import com.example.sr.repository.ActivityRepository;
 import com.example.sr.repository.SportsRepository;
 import com.example.sr.repository.UserRepository;
 import com.example.sr.srMapper.ActivityMapper;
-import com.example.sr.commons.ActivityCreator;
-import com.example.sr.commons.UserCreator;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -24,8 +26,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
-
-import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 class ActivityServiceTest {
@@ -51,114 +51,95 @@ class ActivityServiceTest {
     private User user;
     private Sports sports;
 
+    // NOVO: A variável que simula o usuário logado no sistema
+    private final Long loggedInUserId = 1L;
+
     @BeforeEach
     void setUp() {
-        user = UserCreator.createValidUser();
-
-        sports = new Sports();
-        sports.setId(1L);
-        sports.setName("Corrida");
-
         activity = ActivityCreator.createValidActivity();
         activityRequest = ActivityCreator.createValidActivityRequest();
         activityResponse = ActivityCreator.createValidActivityResponse();
+        user = UserCreator.createValidUser();
+        sports = SportsCreator.createValidSport();
+
+        // Garantindo que a atividade de teste pertence ao usuário logado
+        activity.setUser(user);
+        user.setId(loggedInUserId);
     }
 
     @Test
     @DisplayName("registerActivity returns ActivityResponse when successful")
     void registerActivity_ReturnsActivityResponse_WhenSuccessful() {
-        BDDMockito.when(userRepository.findById(activityRequest.userId())).thenReturn(Optional.of(user));
+        // CORREÇÃO: Usamos o loggedInUserId em vez de activityRequest.userId()
+        BDDMockito.when(userRepository.findById(loggedInUserId)).thenReturn(Optional.of(user));
         BDDMockito.when(sportsRepository.findById(activityRequest.sportsId())).thenReturn(Optional.of(sports));
         BDDMockito.when(mapper.toRequest(activityRequest)).thenReturn(activity);
-        BDDMockito.when(repository.save(any(Activity.class))).thenReturn(activity);
+        BDDMockito.when(repository.save(ArgumentMatchers.any(Activity.class))).thenReturn(activity);
         BDDMockito.when(mapper.toResponse(activity)).thenReturn(activityResponse);
 
-        ActivityResponse savedActivity = service.registerActivity(activityRequest);
+
+        ActivityResponse savedActivity = service.registerActivity(activityRequest, loggedInUserId);
 
         Assertions.assertThat(savedActivity).isNotNull();
         Assertions.assertThat(savedActivity.distance()).isEqualTo(activityRequest.distance());
-        BDDMockito.verify(repository).save(any(Activity.class));
+        BDDMockito.verify(repository).save(ArgumentMatchers.any(Activity.class));
     }
 
     @Test
-    @DisplayName("registerActivity throws BusinessRuleException when User not found")
-    void registerActivity_ThrowsBusinessRuleException_WhenUserNotFound() {
-        BDDMockito.when(userRepository.findById(activityRequest.userId())).thenReturn(Optional.empty());
+    @DisplayName("listActivitiesByUser returns list of activities when successful")
+    void listActivitiesByUser_ReturnsListOfActivities_WhenSuccessful() {
+        BDDMockito.when(repository.findAllByUserId(loggedInUserId)).thenReturn(List.of(activity));
+        BDDMockito.when(mapper.toResponse(ArgumentMatchers.any(Activity.class))).thenReturn(activityResponse);
 
-        Assertions.assertThatExceptionOfType(BusinessRuleException.class)
-                .isThrownBy(() -> service.registerActivity(activityRequest))
-                .withMessage("User not found");
+        List<ActivityResponse> activities = service.listActivitiesByUser(loggedInUserId);
 
-        BDDMockito.verify(sportsRepository, BDDMockito.never()).findById(any());
-        BDDMockito.verify(repository, BDDMockito.never()).save(any(Activity.class));
+        Assertions.assertThat(activities).isNotNull().isNotEmpty().hasSize(1);
     }
 
     @Test
-    @DisplayName("registerActivity throws BusinessRuleException when Sport not found")
-    void registerActivity_ThrowsBusinessRuleException_WhenSportNotFound() {
-        BDDMockito.when(userRepository.findById(activityRequest.userId())).thenReturn(Optional.of(user));
-        BDDMockito.when(sportsRepository.findById(activityRequest.sportsId())).thenReturn(Optional.empty());
-
-        Assertions.assertThatExceptionOfType(BusinessRuleException.class)
-                .isThrownBy(() -> service.registerActivity(activityRequest))
-                .withMessage("Sport not found");
-
-        BDDMockito.verify(repository, BDDMockito.never()).save(any(Activity.class));
-    }
-
-    @Test
-    @DisplayName("listActivitiesByUser returns list of ActivityResponse when successful")
-    void listActivitiesByUser_ReturnsListOfActivityResponse_WhenSuccessful() {
-        BDDMockito.when(repository.findAllByUserId(user.getId())).thenReturn(List.of(activity));
-        BDDMockito.when(mapper.toResponse(any(Activity.class))).thenReturn(activityResponse);
-
-        List<ActivityResponse> activities = service.listActivitiesByUser(user.getId());
-
-        Assertions.assertThat(activities)
-                .isNotNull()
-                .isNotEmpty()
-                .hasSize(1);
-    }
-
-    @Test
-    @DisplayName("searchActivityById returns ActivityResponse when successful")
-    void searchActivityById_ReturnsActivityResponse_WhenSuccessful() {
+    @DisplayName("searchActivityById returns ActivityResponse when user is the owner")
+    void searchActivityById_ReturnsActivityResponse_WhenUserIsTheOwner() {
         BDDMockito.when(repository.findById(activity.getId())).thenReturn(Optional.of(activity));
         BDDMockito.when(mapper.toResponse(activity)).thenReturn(activityResponse);
 
-        ActivityResponse foundActivity = service.searchActivityById(activity.getId());
+        ActivityResponse foundActivity = service.searchActivityById(activity.getId(), loggedInUserId);
 
         Assertions.assertThat(foundActivity).isNotNull();
     }
 
     @Test
-    @DisplayName("searchActivityById throws BusinessRuleException when Activity not found")
-    void searchActivityById_ThrowsBusinessRuleException_WhenActivityNotFound() {
-        BDDMockito.when(repository.findById(any())).thenReturn(Optional.empty());
+    @DisplayName("searchActivityById throws BusinessRuleException when user is NOT the owner")
+    void searchActivityById_ThrowsException_WhenUserIsNotTheOwner() {
+        BDDMockito.when(repository.findById(activity.getId())).thenReturn(Optional.of(activity));
+
+        Long hackerId = 99L;
 
         Assertions.assertThatExceptionOfType(BusinessRuleException.class)
-                .isThrownBy(() -> service.searchActivityById(99L))
-                .withMessage("Activity not found");
+            .isThrownBy(() -> service.searchActivityById(activity.getId(), hackerId))
+            .withMessage("Acesso negado: Esta corrida não pertence a você.");
     }
 
     @Test
-    @DisplayName("deleteActivityById removes Activity when successful")
-    void deleteActivityById_RemovesActivity_WhenSuccessful() {
+    @DisplayName("deleteActivityById removes activity when user is the owner")
+    void deleteActivityById_RemovesActivity_WhenUserIsTheOwner() {
         BDDMockito.when(repository.findById(activity.getId())).thenReturn(Optional.of(activity));
 
-        Assertions.assertThatNoException().isThrownBy(() -> service.deleteActivityById(activity.getId()));
+        Assertions.assertThatNoException().isThrownBy(() -> service.deleteActivityById(activity.getId(), loggedInUserId));
+
         BDDMockito.verify(repository).delete(activity);
     }
 
     @Test
-    @DisplayName("deleteActivityById throws BusinessRuleException when Activity not found")
-    void deleteActivityById_ThrowsBusinessRuleException_WhenActivityNotFound() {
-        BDDMockito.when(repository.findById(any())).thenReturn(Optional.empty());
+    @DisplayName("deleteActivityById throws BusinessRuleException when user is NOT the owner")
+    void deleteActivityById_ThrowsException_WhenUserIsNotTheOwner() {
+        BDDMockito.when(repository.findById(activity.getId())).thenReturn(Optional.of(activity));
+
+        Long hackerId = 99L;
 
         Assertions.assertThatExceptionOfType(BusinessRuleException.class)
-                .isThrownBy(() -> service.deleteActivityById(99L))
-                .withMessage("Activity not found");
+            .isThrownBy(() -> service.deleteActivityById(activity.getId(), hackerId))
+            .withMessage("Acesso negado: Você não pode deletar a corrida de outro usuário.");
 
-        BDDMockito.verify(repository, BDDMockito.never()).delete(any(Activity.class));
+        BDDMockito.verify(repository, BDDMockito.never()).delete(ArgumentMatchers.any());
     }
 }

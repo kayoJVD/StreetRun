@@ -33,21 +33,20 @@ public class ActivityCreator {
 
     public static ActivityRequest createValidActivityRequest() {
         return new ActivityRequest(
-                7.5,
-                LocalDate.of(2026, 3, 29),
-                45,
-                1L,
-                1L
+            7.5,
+            LocalDate.of(2026, 3, 29),
+            45,
+            1L
         );
     }
 
     public static ActivityResponse createValidActivityResponse() {
         return new ActivityResponse(
-                1L,
-                7.5,
-                LocalDate.of(2026, 3, 29),
-                45,
-                "Corrida"
+            1L,
+            7.5,
+            LocalDate.of(2026, 3, 29),
+            45,
+            "Corrida"
         );
     }
 }
