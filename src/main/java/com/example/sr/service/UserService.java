@@ -1,12 +1,15 @@
 package com.example.sr.service;
 
+import com.example.sr.config.TokenConfig;
 import com.example.sr.domain.User;
+import com.example.sr.dto.request.LoginRequest;
 import com.example.sr.dto.request.UserRequest;
 import com.example.sr.dto.response.UserResponse;
 import com.example.sr.exception.BusinessRuleException;
 import com.example.sr.repository.UserRepository;
 import com.example.sr.srMapper.UserMapper;
 import jakarta.transaction.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,10 +17,14 @@ import org.springframework.stereotype.Service;
 public class UserService {
     private final UserRepository repository;
     private final UserMapper mapper;
+    private final PasswordEncoder passwordEncoder;
+    private final TokenConfig tokenConfig;
 
-    public UserService(UserRepository repository, UserMapper mapper) {
+    public UserService(UserRepository repository, UserMapper mapper, PasswordEncoder passwordEncoder, TokenConfig tokenConfig) {
         this.repository = repository;
         this.mapper = mapper;
+        this.passwordEncoder = passwordEncoder;
+        this.tokenConfig = tokenConfig;
     }
 
     public User findByEmail(String email) {
@@ -31,18 +38,19 @@ public class UserService {
             throw new BusinessRuleException("Email already exists");
         }
         User user = mapper.toRequest(request);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         User save = repository.save(user);
 
         return mapper.toResponse(save);
     }
 
-    public UserResponse loginUser(UserRequest request) {
+    public String loginUser(LoginRequest request) {
         User userLogin = repository.findByEmail(request.email())
                 .orElseThrow(() -> new BusinessRuleException("User not found"));
-        if (!userLogin.getPassword().equals(request.password())) {
+        if (!passwordEncoder.matches(request.password(), userLogin.getPassword())) {
             throw new BusinessRuleException("Wrong Password");
         }
-        return mapper.toResponse(userLogin);
+        return tokenConfig.getToken(userLogin);
     }
 
     public UserResponse updateUser(Long id, UserRequest request) {
@@ -50,7 +58,7 @@ public class UserService {
                 .orElseThrow(() -> new BusinessRuleException("User not found"));
 
         user.setName(request.name());
-        user.setName(request.email());
+        user.setEmail(request.email());
         user.setHeight(request.height());
         user.setWeight(request.weight());
         user.setBirthDate(request.birthDate());

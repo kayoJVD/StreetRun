@@ -1,6 +1,7 @@
 package com.example.sr.controller;
 
 import com.example.sr.domain.User;
+import com.example.sr.dto.request.LoginRequest;
 import com.example.sr.dto.request.UserRequest;
 import com.example.sr.dto.response.UserResponse;
 import com.example.sr.service.UserService;
@@ -29,6 +30,13 @@ public class UserController {
         UserResponse response = mapper.toResponse(user);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> loginUser(@RequestBody @Valid LoginRequest request) {
+        log.info("request received to login user : {}", request.email());
+        String token = service.loginUser(request);
+        return ResponseEntity.ok(token);
     }
 
     @PostMapping

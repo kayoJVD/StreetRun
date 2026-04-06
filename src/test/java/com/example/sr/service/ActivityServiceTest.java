@@ -6,7 +6,7 @@ import com.example.sr.domain.User;
 import com.example.sr.dto.request.ActivityRequest;
 import com.example.sr.dto.response.ActivityResponse;
 import com.example.sr.exception.BusinessRuleException;
-import com.example.sr.repository.ActivtyRepository;
+import com.example.sr.repository.ActivityRepository;
 import com.example.sr.repository.SportsRepository;
 import com.example.sr.repository.UserRepository;
 import com.example.sr.srMapper.ActivityMapper;
@@ -34,7 +34,7 @@ class ActivityServiceTest {
     private ActivityService service;
 
     @Mock
-    private ActivtyRepository repository;
+    private ActivityRepository repository;
 
     @Mock
     private UserRepository userRepository;

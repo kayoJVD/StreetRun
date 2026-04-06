@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class StreetReceApplication {
+public class StreetRunApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(StreetReceApplication.class, args);
+		SpringApplication.run(StreetRunApplication.class, args);
 	}
 
 }

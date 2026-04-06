@@ -1,12 +1,10 @@
 package com.example.sr.domain;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 
 
 @Getter @Setter
@@ -14,11 +12,11 @@ import java.time.LocalTime;
 public class Activity {
 
     @ManyToOne
-    @JoinColumn(name = "users_id")
+    @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "sports_id")
+    @JoinColumn(name = "sport_id")
     private Sports sports;
 
     @Id

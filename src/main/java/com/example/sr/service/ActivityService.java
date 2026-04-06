@@ -6,7 +6,7 @@ import com.example.sr.domain.User;
 import com.example.sr.dto.request.ActivityRequest;
 import com.example.sr.dto.response.ActivityResponse;
 import com.example.sr.exception.BusinessRuleException;
-import com.example.sr.repository.ActivtyRepository;
+import com.example.sr.repository.ActivityRepository;
 import com.example.sr.repository.SportsRepository;
 import com.example.sr.repository.UserRepository;
 import com.example.sr.srMapper.ActivityMapper;
@@ -21,13 +21,13 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Transactional
 public class ActivityService {
-    private ActivtyRepository repository;
+    private ActivityRepository repository;
     private UserRepository userRepository;
     private SportsRepository sportsRepository;
     private ActivityMapper mapper;
 
-    public ActivityResponse registerActivity(ActivityRequest request) {
-        User user = userRepository.findById(request.userId())
+    public ActivityResponse registerActivity(ActivityRequest request, Long authenticatedUserId) {
+        User user = userRepository.findById(authenticatedUserId)
                 .orElseThrow(() -> new BusinessRuleException("User not found"));
 
         Sports sports = sportsRepository.findById(request.sportsId())
@@ -41,26 +41,37 @@ public class ActivityService {
         Activity savedActivity = repository.save(activity);
 
         return mapper.toResponse(savedActivity);
-
     }
 
-    public List<ActivityResponse> listActivitiesByUser(Long id) {
-        List<Activity> activities = repository.findAllByUserId(id);
+
+    public List<ActivityResponse> listActivitiesByUser(Long authenticatedUserId) {
+        List<Activity> activities = repository.findAllByUserId(authenticatedUserId);
 
         return activities.stream()
                 .map(mapper::toResponse)
                 .collect(Collectors.toList());
     }
 
-    public ActivityResponse searchActivityById(Long id) {
-        Activity activity = repository.findById(id).orElseThrow(() -> new BusinessRuleException("Activity not found"));
+
+    public ActivityResponse searchActivityById(Long id, Long authenticatedUserId) {
+        Activity activity = repository.findById(id)
+                .orElseThrow(() -> new BusinessRuleException("Activity not found"));
+
+        if (!activity.getUser().getId().equals(authenticatedUserId)) {
+            throw new BusinessRuleException("Acesso negado: Esta corrida não pertence a você.");
+        }
 
         return mapper.toResponse(activity);
     }
 
-    public void deleteActivityById(Long id) {
-        Activity activity = repository.findById(id).orElseThrow(() -> new BusinessRuleException("Activity not found"));
+    public void deleteActivityById(Long id, Long authenticatedUserId) {
+        Activity activity = repository.findById(id)
+                .orElseThrow(() -> new BusinessRuleException("Activity not found"));
+
+        if (!activity.getUser().getId().equals(authenticatedUserId)) {
+            throw new BusinessRuleException("Acesso negado: Você não pode deletar a corrida de outro usuário.");
+        }
+
         repository.delete(activity);
     }
 }
-

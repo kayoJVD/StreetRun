@@ -9,14 +9,14 @@ public record ActivityRequest(
         @NotNull
         @Positive
         Double distance,
+
         @NotNull
         LocalDate date,
+
         @NotNull
         @Positive
         Integer duration,
-        @Positive
-        @NotNull
-        Long userId,
+
         @NotNull
         @Positive
         Long sportsId
