@@ -23,6 +23,10 @@ import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,7 +55,7 @@ class ActivityServiceTest {
     private User user;
     private Sports sports;
 
-    // NOVO: A variável que simula o usuário logado no sistema
+
     private final Long loggedInUserId = 1L;
 
     @BeforeEach
@@ -62,7 +66,6 @@ class ActivityServiceTest {
         user = UserCreator.createValidUser();
         sports = SportsCreator.createValidSport();
 
-        // Garantindo que a atividade de teste pertence ao usuário logado
         activity.setUser(user);
         user.setId(loggedInUserId);
     }
@@ -86,14 +89,23 @@ class ActivityServiceTest {
     }
 
     @Test
-    @DisplayName("listActivitiesByUser returns list of activities when successful")
-    void listActivitiesByUser_ReturnsListOfActivities_WhenSuccessful() {
-        BDDMockito.when(repository.findAllByUserId(loggedInUserId)).thenReturn(List.of(activity));
+    @DisplayName("listActivitiesByUser returns a page of activities when successful")
+    void listActivitiesByUser_ReturnsPageOfActivities_WhenSuccessful() {
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+
+        Page<Activity> activityPage = new PageImpl<>(List.of(activity));
+
+        BDDMockito.when(repository.findAllByUserId(ArgumentMatchers.anyLong(), ArgumentMatchers.any(Pageable.class)))
+            .thenReturn(activityPage);
+
         BDDMockito.when(mapper.toResponse(ArgumentMatchers.any(Activity.class))).thenReturn(activityResponse);
 
-        List<ActivityResponse> activities = service.listActivitiesByUser(loggedInUserId);
+        Page<ActivityResponse> result = service.listActivitiesByUser(loggedInUserId, pageable);
 
-        Assertions.assertThat(activities).isNotNull().isNotEmpty().hasSize(1);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result.getContent()).hasSize(1);
     }
 
     @Test

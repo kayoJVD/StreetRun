@@ -19,6 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -60,7 +63,6 @@ class ActivityControllerTest {
     void init() {
         response = ActivityCreator.createValidActivityResponse();
 
-        // MÁGICA: Forjando o crachá de acesso para a anotação @AuthenticationPrincipal funcionar
         JWTUserData userData = JWTUserData.builder().userId(loggedInUserId).email("kayo@alves.com").build();
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userData, null, List.of());
         SecurityContextHolder.getContext().setAuthentication(auth);
@@ -81,12 +83,15 @@ class ActivityControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/activities/me returns list of ActivityResponse when successful")
-    void listMyActivities_ReturnsListOfActivityResponse_WhenSuccessful() throws Exception {
+    @DisplayName("GET /api/v1/activities/me returns paginated ActivityResponse when successful")
+    void listMyActivities_ReturnsPaginatedResponse_WhenSuccessful() throws Exception {
 
-        BDDMockito.when(service.listActivitiesByUser(ArgumentMatchers.any())).thenReturn(List.of(response));
+        org.springframework.data.domain.Page<ActivityResponse> pageResponse = new org.springframework.data.domain.PageImpl<>(List.of(response));
 
-        String responseJson = readFile("activities/list-activities-200.json");
+        BDDMockito.when(service.listActivitiesByUser(ArgumentMatchers.any(), ArgumentMatchers.any()))
+            .thenReturn(pageResponse);
+
+        String responseJson = readFile("activities/list-activities-paginated-200.json");
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/activities/me"))
             .andDo(MockMvcResultHandlers.print())

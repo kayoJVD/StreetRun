@@ -12,6 +12,8 @@ import com.example.sr.repository.UserRepository;
 import com.example.sr.srMapper.ActivityMapper;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -44,12 +46,10 @@ public class ActivityService {
     }
 
 
-    public List<ActivityResponse> listActivitiesByUser(Long authenticatedUserId) {
-        List<Activity> activities = repository.findAllByUserId(authenticatedUserId);
+    public Page<ActivityResponse> listActivitiesByUser(Long authenticatedUserId, Pageable pageable) {
+        Page<Activity> activitiesPage = repository.findAllByUserId(authenticatedUserId, pageable);
 
-        return activities.stream()
-                .map(mapper::toResponse)
-                .collect(Collectors.toList());
+        return activitiesPage.map(mapper::toResponse);
     }
 
 

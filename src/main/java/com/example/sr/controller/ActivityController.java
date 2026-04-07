@@ -7,6 +7,9 @@ import com.example.sr.service.ActivityService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,11 +34,14 @@ public class ActivityController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<List<ActivityResponse>> listMyActivities(@AuthenticationPrincipal JWTUserData userData) {
-        log.debug("Request to get all activities for logged user id: {}", userData);
+    public ResponseEntity<Page<ActivityResponse>> listMyActivities(
+        @AuthenticationPrincipal JWTUserData userData,
+        @PageableDefault(size = 10, sort = {"date"}, direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
 
-        List<ActivityResponse> activities = service.listActivitiesByUser(userData.userId());
+        log.debug("Request to get paginated activities for user id: {}", userData.userId());
 
+
+        Page<ActivityResponse> activities = service.listActivitiesByUser(userData.userId(), pageable);
         return ResponseEntity.status(HttpStatus.OK).body(activities);
     }
 
