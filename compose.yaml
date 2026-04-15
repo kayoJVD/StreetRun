@@ -1,15 +1,16 @@
 services:
-  db:
-    image: mysql:8.0
-    container_name: sr-db
-    restart: always
-    environment:
-      MYSQL_DATABASE: auth_db
-      MYSQL_ROOT_PASSWORD: root_password
-    ports:
-      - "3306:3306"
-    volumes:
-      - db_data:/var/lib/mysql
+    db:
+        image: postgis/postgis:15-3.3
+        container_name: sr-db
+        restart: always
+        environment:
+            POSTGRES_DB: streetrun_db
+            POSTGRES_USER: admin
+            POSTGRES_PASSWORD: admin123
+        ports:
+            - "5433:5432"
+        volumes:
+            - postgres_data_v2:/var/lib/postgresql/data
 
 volumes:
-  db_data:
+    postgres_data_v2:

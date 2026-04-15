@@ -1,6 +1,8 @@
 spring:
     application:
         name: street-race
+    profiles:
+        active: ${SPRING_PROFILES_ACTIVE:dev}
     datasource:
         driver-class-name: org.postgresql.Driver
         url: jdbc:postgresql://127.0.0.1:5433/streetrun_db
@@ -17,4 +19,4 @@ spring:
 api:
     security:
         token:
-            secret: street-run-secret-dev
+            secret: ${JWT_SECRET:street-run-secret-dev}
