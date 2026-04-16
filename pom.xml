@@ -28,9 +28,12 @@
     </scm>
     <properties>
         <java.version>21</java.version>
-        <sonar.organization>kayojvd</sonar.organization>
+        <sonar.organization>kayojvdstreetrun</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <tomcat.version>11.0.21</tomcat.version>
+        <spring-security.version>7.0.4</spring-security.version>
+        <jackson-bom.version>3.1.1</jackson-bom.version>
     </properties>
     <dependencies>
         <dependency>
