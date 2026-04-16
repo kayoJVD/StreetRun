@@ -36,7 +36,8 @@ public class ActivityCreator {
             7.5,
             LocalDate.of(2026, 3, 29),
             45,
-            1L
+            1L,
+            null
         );
     }
 
@@ -46,7 +47,9 @@ public class ActivityCreator {
             7.5,
             LocalDate.of(2026, 3, 29),
             45,
-            "Corrida"
+            "Corrida",
+            "00:00",
+            null
         );
     }
 }

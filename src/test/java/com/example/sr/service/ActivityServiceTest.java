@@ -73,7 +73,6 @@ class ActivityServiceTest {
     @Test
     @DisplayName("registerActivity returns ActivityResponse when successful")
     void registerActivity_ReturnsActivityResponse_WhenSuccessful() {
-        // CORREÇÃO: Usamos o loggedInUserId em vez de activityRequest.userId()
         BDDMockito.when(userRepository.findById(loggedInUserId)).thenReturn(Optional.of(user));
         BDDMockito.when(sportsRepository.findById(activityRequest.sportsId())).thenReturn(Optional.of(sports));
         BDDMockito.when(mapper.toRequest(activityRequest)).thenReturn(activity);
@@ -86,6 +85,37 @@ class ActivityServiceTest {
         Assertions.assertThat(savedActivity).isNotNull();
         Assertions.assertThat(savedActivity.distance()).isEqualTo(activityRequest.distance());
         BDDMockito.verify(repository).save(ArgumentMatchers.any(Activity.class));
+    }
+    @Test
+    @DisplayName("registerActivity throws BusinessRuleException when user is not found")
+    void registerActivity_ThrowsException_WhenUserNotFound() {
+
+        BDDMockito.when(userRepository.findById(loggedInUserId)).thenReturn(Optional.empty());
+
+
+        Assertions.assertThatExceptionOfType(BusinessRuleException.class)
+            .isThrownBy(() -> service.registerActivity(activityRequest, loggedInUserId))
+            .withMessage("User not found");
+
+
+        BDDMockito.verify(sportsRepository, BDDMockito.never()).findById(ArgumentMatchers.any());
+        BDDMockito.verify(repository, BDDMockito.never()).save(ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("registerActivity throws BusinessRuleException when sport is not found")
+    void registerActivity_ThrowsException_WhenSportNotFound() {
+
+        BDDMockito.when(userRepository.findById(loggedInUserId)).thenReturn(Optional.of(user));
+        BDDMockito.when(sportsRepository.findById(activityRequest.sportsId())).thenReturn(Optional.empty());
+
+
+        Assertions.assertThatExceptionOfType(BusinessRuleException.class)
+            .isThrownBy(() -> service.registerActivity(activityRequest, loggedInUserId))
+            .withMessage("Sport not found");
+
+
+        BDDMockito.verify(repository, BDDMockito.never()).save(ArgumentMatchers.any());
     }
 
     @Test

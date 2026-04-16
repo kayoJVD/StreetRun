@@ -12,12 +12,13 @@ import com.example.sr.repository.UserRepository;
 import com.example.sr.srMapper.ActivityMapper;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -27,18 +28,28 @@ public class ActivityService {
     private UserRepository userRepository;
     private SportsRepository sportsRepository;
     private ActivityMapper mapper;
+    private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
     public ActivityResponse registerActivity(ActivityRequest request, Long authenticatedUserId) {
         User user = userRepository.findById(authenticatedUserId)
-                .orElseThrow(() -> new BusinessRuleException("User not found"));
+            .orElseThrow(() -> new BusinessRuleException("User not found"));
 
         Sports sports = sportsRepository.findById(request.sportsId())
-                .orElseThrow(() -> new BusinessRuleException("Sport not found"));
+            .orElseThrow(() -> new BusinessRuleException("Sport not found"));
 
         Activity activity = mapper.toRequest(request);
 
         activity.setUser(user);
         activity.setSports(sports);
+
+        if (request.route() != null && !request.route().isEmpty()) {
+            Coordinate[] coordinates = request.route().stream()
+                .map(c -> new Coordinate(c.lng(), c.lat()))
+                .toArray(Coordinate[]::new);
+
+            LineString lineString = geometryFactory.createLineString(coordinates);
+            activity.setRoute(lineString);
+        }
 
         Activity savedActivity = repository.save(activity);
 
@@ -51,6 +62,7 @@ public class ActivityService {
 
         return activitiesPage.map(mapper::toResponse);
     }
+
 
 
     public ActivityResponse searchActivityById(Long id, Long authenticatedUserId) {
