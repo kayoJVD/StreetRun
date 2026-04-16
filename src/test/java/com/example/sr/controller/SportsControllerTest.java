@@ -87,8 +87,8 @@ class SportsControllerTest {
 
     @ParameterizedTest
     @MethodSource("badRequestSource")
-    @DisplayName("POST /api/v1/sports returns 400 Bad Request when fields are invalid")
-    void createSport_ReturnsBadRequest_WhenFieldsAreInvalid(String fileName) throws Exception {
+    @DisplayName("POST /api/v1/sports returns 422 Unprocessable Entity when fields are invalid")
+    void createSport_ReturnsUnprocessableEntity_WhenFieldsAreInvalid(String fileName) throws Exception {
         String requestJson = readFile(fileName);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/sports")
