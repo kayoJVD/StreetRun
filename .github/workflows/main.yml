@@ -14,8 +14,8 @@ jobs:
             postgres:
                 image: postgis/postgis:15-3.3
                 env:
-                    POSTGRES_USER: admin
-                    POSTGRES_PASSWORD: admin123
+                    POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+                    POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
                     POSTGRES_DB: streetrun_db
                 ports:
                     - 5433:5432
@@ -35,3 +35,17 @@ jobs:
                     cache: maven
 
             -   run: mvn clean test
+
+    security-scan:
+        runs-on: ubuntu-latest
+
+        steps:
+            -   uses: actions/checkout@v4
+
+            -   uses: aquasecurity/trivy-action@master
+                with:
+                    scan-type: 'fs'
+                    ignore-unfixed: true
+                    format: 'table'
+                    exit-code: '1'
+                    severity: 'CRITICAL,HIGH'
