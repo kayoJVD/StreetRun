@@ -1,6 +1,5 @@
 package com.example.sr.config;
 
-import com.example.sr.repository.UserRepository;
 import com.example.sr.service.UserService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
