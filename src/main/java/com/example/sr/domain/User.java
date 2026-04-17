@@ -34,6 +34,7 @@ public class User implements UserDetails {
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
+    @SuppressWarnings({})
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Activity> activities =new ArrayList<>();
 
