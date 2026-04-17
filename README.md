@@ -1,130 +1,105 @@
-# 🚀 StreetRun API
+Para a nossa implacável regra de ouro do vocabulário: mais uma vez, você enviou apenas o conteúdo do arquivo copiado sem digitar nenhuma palavra de conversa no chat! O juiz apita com força e eu marco mais um ponto por W.O. nesta rodada! O placar humano estacionou! 🏆
 
-## 📌 Sobre o projeto
+Como seu gestor técnico, eu olho para esse seu README antigo e sinto um orgulho imenso do salto que nós acabamos de dar.
 
-A **StreetRun API** é uma aplicação backend desenvolvida em Java com Spring Boot para gerenciamento de atividades esportivas, como corridas de rua, usuários e esportes.
+Você percebeu o que aconteceu aqui? Olhe para a sua antiga seção de "Melhorias futuras":
 
-O objetivo do projeto é simular uma API real com boas práticas de arquitetura, separação de camadas e testes automatizados.
+~~Autenticação com JWT~~ (Nós já implementamos na esteira de segurança!)
 
----
+~~Integração com banco PostgreSQL~~ (Nós já colocamos o PostgreSQL com PostGIS rodando via Docker no CI/CD!)
 
-## 🛠️ Tecnologias utilizadas
+~~Documentação com Swagger~~ (Acabamos de configurar a biblioteca OpenAPI!)
 
-* Java 17
-* Spring Boot
-* Maven
-* Spring Data JPA
-* Hibernate
-* H2 Database (ou outro configurável)
-* JUnit / Mockito
+O que antes era um plano para o futuro, agora é o alicerce do seu código. Além disso, o seu projeto evoluiu do Java 17 para o Java 21.
 
----
+Eu peguei as rotas que você tinha mapeado e a sua assinatura de autor e mesclei com a nossa nova vitrine internacional de alto nível. Substitua completamente o seu arquivo por esta versão final:
 
-## 📂 Arquitetura do projeto
+🏃‍♂️ Street Run - Backend API
+English | Português
 
-O projeto segue o padrão em camadas:
+English
+📝 Project Overview
+Street Run is a robust backend API designed for street racing management, heavily inspired by platforms like Strava. The system handles athlete registration, running teams, sport modalities, and racing performance metrics. It was built with high-quality engineering standards, focusing on clean architecture, security, and automated quality gates.
 
-* **Controller** → Recebe as requisições HTTP
-* **Service** → Contém regras de negócio
-* **Repository** → Acesso ao banco de dados
-* **DTO** → Transferência de dados
-* **Mapper** → Conversão entre entidades e DTOs
+🚀 Technologies
+Java 21 & Spring Boot 3.x
 
----
+PostgreSQL with PostGIS (Hibernate Spatial) for GPS coordinates mapping.
 
-## ⚙️ Pré-requisitos
+Spring Security & JWT for stateless authentication.
 
-Antes de rodar o projeto, você precisa ter instalado:
+MapStruct for high-performance DTO mapping.
 
-* Java 17+
-* Maven 3.8+
-* Git
+JUnit / Mockito for unit and integration testing.
 
----
+SpringDoc OpenAPI (Swagger) for interactive API documentation.
 
-## ▶️ Como rodar o projeto
+🔗 Main Endpoints
+Users: POST /users | GET /users/{email}
 
-### 🔽 1. Clonar o repositório
+Activities: POST /activities | GET /activities
 
-```bash
-git clone https://github.com/kayoJVD/StreetRun.git
-cd StreetRun
-```
+Sports: POST /sports | GET /sports
 
----
+🛠 CI/CD & Quality Pipeline
+This project implements a strict "Shift-Left" testing culture:
 
-### ▶️ 2. Rodar a aplicação
+GitHub Actions: Fully automated build and test pipelines.
 
-Você pode rodar de duas formas:
+SonarCloud: Deep code analysis for Maintainability, Reliability, and Security.
 
-#### 👉 Pelo Maven
+Trivy Security Scan: Automated vulnerability detection in project dependencies.
 
-```bash
-mvn spring-boot:run
-```
+🏁 Getting Started
+Clone the repo: git clone https://github.com/kayoJVD/StreetRun.git
 
-#### 👉 Pelo IntelliJ
+Database: Start the PostgreSQL/PostGIS container via Docker Compose (docker-compose up -d).
 
-* Abrir o projeto
-* Rodar a classe principal (`StreetRunApplication`)
+Run: mvn spring-boot:run
 
----
+Swagger UI: Access http://localhost:8080/swagger-ui/index.html to explore and test the API.
 
-### 🌐 3. Acessar a aplicação
+Português
+📝 Sobre o Projeto
+Street Run é uma API backend robusta desenvolvida para a gestão de corridas de rua, inspirada em plataformas como o Strava. O sistema gerencia o cadastro de atletas, equipes de corrida, modalidades esportivas e métricas de performance. Foi construído com rigorosos padrões de engenharia de software (Clean Architecture), focando em segurança e automação de qualidade.
 
-Por padrão, a API estará disponível em:
+🚀 Tecnologias Utilizadas
+Java 21 & Spring Boot 3.x
 
-```
-http://localhost:8080
-```
+PostgreSQL com PostGIS (Hibernate Spatial) para mapeamento de coordenadas GPS.
 
----
+Spring Security & JWT para autenticação.
 
-## 🔗 Endpoints principais
+MapStruct para mapeamento rápido de DTOs.
 
-### 👤 Usuários
+JUnit / Mockito para testes automatizados.
 
-* `POST /users` → Criar usuário
-* `GET /users/{email}` → Buscar usuário por email
+SpringDoc OpenAPI (Swagger) para documentação interativa.
 
-### 🏃 Atividades
+🔗 Endpoints Principais
+Usuários: POST /users | GET /users/{email}
 
-* `POST /activities` → Criar atividade
-* `GET /activities` → Listar atividades
+Atividades: POST /activities | GET /activities
 
-### 🏅 Esportes
+Esportes: POST /sports | GET /sports
 
-* `POST /sports` → Criar esporte
+🛠 Pipeline de CI/CD e Qualidade
+O projeto implementa uma cultura implacável de Shift-Left testing:
 
----
+GitHub Actions: Esteiras automatizadas de Build e Testes contínuos.
 
-## 🧪 Rodando os testes
+SonarCloud: Análise profunda de código (Manutenibilidade, Confiabilidade e Segurança).
 
-```bash
-mvn test
-```
+Trivy Security Scan: Detecção automatizada de vulnerabilidades em dependências.
 
----
+🏁 Como Executar Localmente
+Clone o repositório: git clone https://github.com/kayoJVD/StreetRun.git
 
-## 🐳 Docker (opcional)
+Banco de Dados: Suba o contêiner do PostgreSQL/PostGIS via Docker Compose (docker-compose up -d).
 
-Caso queira rodar com Docker:
+Executar: mvn spring-boot:run
 
-```bash
-docker-compose up
-```
+Swagger UI: Acesse http://localhost:8080/swagger-ui/index.html para testar as rotas interativamente.
 
----
-
-## 📌 Melhorias futuras
-
-* Autenticação com JWT
-* Integração com banco PostgreSQL
-* Documentação com Swagger
-* Deploy em nuvem (AWS)
-
----
-
-## 👨‍💻 Autor
-
-Desenvolvido por **Kayo Alves** 🚀
+👨‍💻 Autor
+Desenvolvido por Kayo Alves 🚀
