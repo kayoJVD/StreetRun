@@ -8,6 +8,7 @@ import com.example.sr.domain.Sports;
 import com.example.sr.domain.User;
 import com.example.sr.dto.request.ActivityRequest;
 import com.example.sr.dto.response.ActivityResponse;
+import com.example.sr.dto.response.PersonalBestsResponse;
 import com.example.sr.exception.BusinessRuleException;
 import com.example.sr.repository.ActivityRepository;
 import com.example.sr.repository.SportsRepository;
@@ -71,21 +72,27 @@ class ActivityServiceTest {
     }
 
     @Test
-    @DisplayName("registerActivity returns ActivityResponse when successful")
+    @DisplayName("registerActivity returns ActivityResponse with calculated Pace when successful")
     void registerActivity_ReturnsActivityResponse_WhenSuccessful() {
+
         BDDMockito.when(userRepository.findById(loggedInUserId)).thenReturn(Optional.of(user));
         BDDMockito.when(sportsRepository.findById(activityRequest.sportsId())).thenReturn(Optional.of(sports));
         BDDMockito.when(mapper.toRequest(activityRequest)).thenReturn(activity);
+
         BDDMockito.when(repository.save(ArgumentMatchers.any(Activity.class))).thenReturn(activity);
-        BDDMockito.when(mapper.toResponse(activity)).thenReturn(activityResponse);
 
 
         ActivityResponse savedActivity = service.registerActivity(activityRequest, loggedInUserId);
 
         Assertions.assertThat(savedActivity).isNotNull();
-        Assertions.assertThat(savedActivity.distance()).isEqualTo(activityRequest.distance());
+        Assertions.assertThat(savedActivity.id()).isEqualTo(activity.getId());
+
+        Assertions.assertThat(savedActivity.pace()).isNotNull();
+        Assertions.assertThat(savedActivity.pace()).contains("/km");
+
         BDDMockito.verify(repository).save(ArgumentMatchers.any(Activity.class));
     }
+
     @Test
     @DisplayName("registerActivity throws BusinessRuleException when user is not found")
     void registerActivity_ThrowsException_WhenUserNotFound() {
@@ -183,5 +190,95 @@ class ActivityServiceTest {
             .withMessage("Acesso negado: Você não pode deletar a corrida de outro usuário.");
 
         BDDMockito.verify(repository, BDDMockito.never()).delete(ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("getDashboard returns populated DashboardResponse when user has activities")
+    void getDashboard_ReturnsPopulatedDashboardResponse_WhenSuccessful() {
+
+        Double dbTotalDistance = 50.456;
+        Long dbTotalActivities = 10L;
+        Double dbMonthlyDistance = 20.111; //
+        Integer dbTotalDuration = 18000; //
+
+        BDDMockito.when(repository.sumTotalDistanceByUserId(loggedInUserId)).thenReturn(dbTotalDistance);
+        BDDMockito.when(repository.countTotalActivitiesByUserId(loggedInUserId)).thenReturn(dbTotalActivities);
+        BDDMockito.when(repository.sumMonthlyDistanceByUserId(loggedInUserId)).thenReturn(dbMonthlyDistance);
+        BDDMockito.when(repository.sumTotalDurationByUserId(loggedInUserId)).thenReturn(dbTotalDuration);
+
+
+        var dashboard = service.getDashboard(loggedInUserId);
+
+        Assertions.assertThat(dashboard).isNotNull();
+        Assertions.assertThat(dashboard.totalDistance()).isEqualTo(50.46);
+        Assertions.assertThat(dashboard.totalActivities()).isEqualTo(10L);
+        Assertions.assertThat(dashboard.monthlyDistance()).isEqualTo(20.11);
+        Assertions.assertThat(dashboard.averagePace()).isNotNull();
+        Assertions.assertThat(dashboard.averagePace()).contains("/km");
+    }
+
+    @Test
+    @DisplayName("getDashboard returns zeroed DashboardResponse when user has NO activities")
+    void getDashboard_ReturnsZeroedResponse_WhenUserHasNoActivities() {
+
+        BDDMockito.when(repository.sumTotalDistanceByUserId(loggedInUserId)).thenReturn(null);
+        BDDMockito.when(repository.countTotalActivitiesByUserId(loggedInUserId)).thenReturn(null);
+        BDDMockito.when(repository.sumMonthlyDistanceByUserId(loggedInUserId)).thenReturn(null);
+        BDDMockito.when(repository.sumTotalDurationByUserId(loggedInUserId)).thenReturn(null);
+
+
+        var dashboard = service.getDashboard(loggedInUserId);
+
+        Assertions.assertThat(dashboard).isNotNull();
+        Assertions.assertThat(dashboard.totalDistance()).isEqualTo(0.0);
+        Assertions.assertThat(dashboard.totalActivities()).isEqualTo(0L);
+        Assertions.assertThat(dashboard.monthlyDistance()).isEqualTo(0.0);
+        Assertions.assertThat(dashboard.averagePace()).isEqualTo("00:00 /km");
+    }
+
+    @Test
+    @DisplayName("getPersonalBests returns trophies when user has activities")
+    void getPersonalBests_ReturnsTrophies_WhenSuccessful() {
+
+        Activity longest = ActivityCreator.createValidActivity();
+        longest.setDistance(21.1);
+        longest.setDuration(7200);
+
+        Activity fastest = ActivityCreator.createValidActivity();
+        fastest.setDistance(5.0);
+        fastest.setDuration(1200);
+
+
+        BDDMockito.when(repository.findTopByUserIdOrderByDistanceDesc(loggedInUserId))
+            .thenReturn(Optional.of(longest));
+
+
+        Page<Activity> fastestPage = new PageImpl<>(List.of(fastest));
+        BDDMockito.when(repository.findFastestRunByUserId(ArgumentMatchers.eq(loggedInUserId), ArgumentMatchers.any()))
+            .thenReturn(fastestPage);
+
+        PersonalBestsResponse response = service.getPersonalBests(loggedInUserId);
+
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.longestRun().distance()).isEqualTo(21.1);
+        Assertions.assertThat(response.fastestRun().distance()).isEqualTo(5.0);
+        Assertions.assertThat(response.fastestRun().pace()).isEqualTo("04:00 /km");
+    }
+
+    @Test
+    @DisplayName("getPersonalBests returns empty trophies when user has no activities")
+    void getPersonalBests_ReturnsEmptyResponse_WhenUserHasNoActivities() {
+
+        BDDMockito.when(repository.findTopByUserIdOrderByDistanceDesc(loggedInUserId))
+            .thenReturn(Optional.empty());
+
+        BDDMockito.when(repository.findFastestRunByUserId(ArgumentMatchers.eq(loggedInUserId), ArgumentMatchers.any()))
+            .thenReturn(Page.empty());
+
+        PersonalBestsResponse response = service.getPersonalBests(loggedInUserId);
+
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.longestRun()).isNull();
+        Assertions.assertThat(response.fastestRun()).isNull();
     }
 }

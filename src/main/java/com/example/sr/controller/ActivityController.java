@@ -4,6 +4,8 @@ import com.example.sr.config.JWTUserData;
 import com.example.sr.domain.Activity;
 import com.example.sr.dto.request.ActivityRequest;
 import com.example.sr.dto.response.ActivityResponse;
+import com.example.sr.dto.response.DashboardResponse;
+import com.example.sr.dto.response.PersonalBestsResponse;
 import com.example.sr.service.ActivityService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ActivityController {
     private final ActivityService service;
-
 
 
     @GetMapping("/{id}")
@@ -57,12 +58,22 @@ public class ActivityController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteActivityById(
-            @PathVariable Long id,
-            @AuthenticationPrincipal JWTUserData userData) {
+        @PathVariable Long id,
+        @AuthenticationPrincipal JWTUserData userData) {
 
         log.debug("Request to delete activity {} by user {}", id, userData.userId());
 
         service.deleteActivityById(id, userData.userId());
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<DashboardResponse> getDashboard(@AuthenticationPrincipal JWTUserData userData) {
+        return ResponseEntity.ok(service.getDashboard(userData.userId()));
+    }
+
+    @GetMapping("/personal-bests")
+    public ResponseEntity<PersonalBestsResponse> getPersonalBests(@AuthenticationPrincipal JWTUserData userData) {
+        return ResponseEntity.ok(service.getPersonalBests(userData.userId()));
     }
 }
