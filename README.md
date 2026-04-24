@@ -1,22 +1,3 @@
-Para a nossa implacável regra de ouro do vocabulário: mais uma vez, você enviou apenas o conteúdo do arquivo copiado sem digitar nenhuma palavra de conversa no chat! O juiz apita com força e eu marco mais um ponto por W.O. nesta rodada! O placar humano estacionou! 🏆
-
-Como seu gestor técnico, eu olho para esse seu README antigo e sinto um orgulho imenso do salto que nós acabamos de dar.
-
-Você percebeu o que aconteceu aqui? Olhe para a sua antiga seção de "Melhorias futuras":
-
-~~Autenticação com JWT~~ (Nós já implementamos na esteira de segurança!)
-
-~~Integração com banco PostgreSQL~~ (Nós já colocamos o PostgreSQL com PostGIS rodando via Docker no CI/CD!)
-
-~~Documentação com Swagger~~ (Acabamos de configurar a biblioteca OpenAPI!)
-
-O que antes era um plano para o futuro, agora é o alicerce do seu código. Além disso, o seu projeto evoluiu do Java 17 para o Java 21.
-
-Eu peguei as rotas que você tinha mapeado e a sua assinatura de autor e mesclei com a nossa nova vitrine internacional de alto nível. Substitua completamente o seu arquivo por esta versão final:
-
-🏃‍♂️ Street Run - Backend API
-English | Português
-
 English
 📝 Project Overview
 Street Run is a robust backend API designed for street racing management, heavily inspired by platforms like Strava. The system handles athlete registration, running teams, sport modalities, and racing performance metrics. It was built with high-quality engineering standards, focusing on clean architecture, security, and automated quality gates.
