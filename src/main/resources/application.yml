@@ -3,9 +3,9 @@ spring:
         name: street-race
     datasource:
         driver-class-name: org.postgresql.Driver
-        url: jdbc:postgresql://${POSTGRES_HOST:127.0.0.1}:${POSTGRES_PORT:5433}/${POSTGRES_DB:streetrun_db}
-        username: ${POSTGRES_USER:admin}
-        password: ${POSTGRES_PASSWORD:admin123}
+        url: jdbc:postgresql://ep-raspy-bonus-apfremxc-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require
+        username: neondb_owner
+        password: npg_yT2SWuOM4BRw
     jpa:
         hibernate:
             ddl-auto: update

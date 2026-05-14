@@ -32,13 +32,6 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<String> loginUser(@RequestBody @Valid LoginRequest request) {
-        log.info("request received to login user : {}", request.email());
-        String token = service.loginUser(request);
-        return ResponseEntity.ok(token);
-    }
-
     @PostMapping
     public ResponseEntity<UserResponse> registerUser(@RequestBody @Valid UserRequest request){
         log.info("request received to create user : {}", request);
